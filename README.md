@@ -35,7 +35,6 @@ Front End (HTML and CSS):(BY  SINDOORA S AND KUMARI DIVYA)
 
 1. Structured HTML/CSS: Create a structured layout and style the elements for a visually appealing interface.
 2. Responsive Design: Ensure the application adapts to different screen sizes using CSS media queries.
-3. Semantic HTML: Use semantic elements for accessibility and SEO benefits.
 4. Interactive Features: Add CSS transitions and animations for user interactions.
 
 Backend (JavaScript and Firebase): (BY ATHULYA ANILKUMAR AND KHUSHI SINGH)
