@@ -28,7 +28,7 @@ With the real-time checkbox system, creating a strong password becomes an intera
 
 #pop up box:
 
-Reminding the user when the password is less than 8 characters. it disappears automatically once the condition is satisfied.
+Reminding the user when the password is less than 8 characters. It disappears automatically once the condition is satisfied.
 
 
 Front End (HTML and CSS):(BY  SINDOORA S AND KUMARI DIVYA)
