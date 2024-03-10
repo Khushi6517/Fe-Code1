@@ -26,11 +26,11 @@ Our password strength checker features an intuitive power bar indicator that dyn
 
 With the real-time checkbox system, creating a strong password becomes an interactive experience. Each checkbox represents a crucial aspect of password security, such as uppercase letters, lowercase letters, numbers, and special characters. As you type, the corresponding checkboxes toggle on or off, indicating whether you've met each requirement.
 The power bar changes color with increasing security in the password along with the checkbox.
- 1.very weak:red
- 2.weak:orange
- 3.moderate:yellow
- 4.strong:light green
- 5.very strong:dark green
+ 1.very weak=red
+ 2.weak=orange
+ 3.moderate=yellow
+ 4.stron=:light green
+ 5.very strong=dark green
 
 #pop up box:
 
