@@ -3,7 +3,7 @@
 Our password strength checker is a powerful tool designed to ensure the security of your online accounts by evaluating the strength of your passwords against established guidelines. By following specific criteria, our checker helps you create robust passwords that are resilient against unauthorized access.
 
 ## GUIDELINES ##
-1.Must have atleast 8 characters
+1. Must have atleast 8 characters
 2. must contain special character
 3. must contain numeric value
 4. must contain uppercase
@@ -25,6 +25,10 @@ Our password strength checker features an intuitive power bar indicator that dyn
 #Interactive Password Guidance:
 
 With the real-time checkbox system, creating a strong password becomes an interactive experience. Each checkbox represents a crucial aspect of password security, such as uppercase letters, lowercase letters, numbers, and special characters. As you type, the corresponding checkboxes toggle on or off, indicating whether you've met each requirement.
+
+#pop up box:
+
+Reminding the user when the password is less than 8 characters. it disappears automatically once the condition is satisfied.
 
 
 Front End (HTML and CSS):(BY  SINDOORA S AND KUMARI DIVYA)
