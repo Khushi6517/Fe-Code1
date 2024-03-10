@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Strength Checker & Firebase Data Input</title>
+
+    <!-- Add Firebase scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.6/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.6/firebase-database-compat.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #3498db;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-family: 'Lucida Handwriting', cursive;
+        }
+
+        form {
+            max-width: 400px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            text-align: center;
+        }
+
+        input,
+        button {
+            display: block;
+            margin: 10px auto;
+            width: calc(100% - 20px);
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        #password-container {
+            position: relative;
+        }
+
+        #password {
+            width: calc(100% - 40px);
+            padding: 10px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .eye-icon {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            z-index: 1;
+        }
+
+        #strength-indicator {
+            font-weight: bold;
+        }
+
+        #power-bar {
+            height: 20px;
+            background-color: #eee;
+            margin-top: 10px;
+            width: 0;
+            transition: width 0.3s ease-in-out;
+        }
+
+        #power-bar.very-weak {
+            background-color: #ff4d4d;
+        }
+
+        #power-bar.weak {
+            background-color: #ffa07a;
+        }
+
+        #power-bar.moderate {
+            background-color: #ffd700;
+        }
+
+        #power-bar.strong {
+            background-color: #7fff7f;
+        }
+
+        #power-bar.very-strong {
+            background-color: #4dff4d;
+        }
+
+        /* Checkbox styles */
+        .checkbox-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .checkbox-label {
+            flex: 1;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            color: #333;
+        }
+
+        .checkbox-label input {
+            margin-right: 5px;
+        }
+
+        /* Tooltip for password length */
+        .tooltip {
+            position: absolute;
+            top: 100%;
+            left: calc(100% + 10px);
+            background-color: #f44336;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        #password-container:hover .tooltip {
+            display: block;
+        }
+
+        /* Tick styles */
+        .tick {
+            color: #4dff4d;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Pass Shield</h1>
+
+    <!-- Password Strength Checker Form -->
+    <form id="passwordForm">
+        <label for="password">Enter Password:</label>
+        <div id="password-container">
+            <input type="password" id="password" name="password" required>
+            <div class="tooltip">Password should be at least 8 characters long.</div>
+        </div>
+
+        <!-- Checkboxes for character types -->
+        <div class="checkbox-container">
+            <div class="checkbox-label">
+                <span class="tick" id="uppercaseTick"></span>
+                <input type="checkbox" id="uppercaseCheckbox" disabled>
+                <label for="uppercaseCheckbox">Uppercase</label>
+            </div>
+            <div class="checkbox-label">
+                <span class="tick" id="lowercaseTick"></span>
+                <input type="checkbox" id="lowercaseCheckbox" disabled>
+                <label for="lowercaseCheckbox">Lowercase</label>
+            </div>
+            <div class="checkbox-label">
+                <span class="tick" id="numberTick"></span>
+                <input type="checkbox" id="numberCheckbox" disabled>
+                <label for="numberCheckbox">Number</label>
+            </div>
+            <div class="checkbox-label">
+                <span class="tick" id="specialCharTick"></span>
+                <input type="checkbox" id="specialCharCheckbox" disabled>
+                <label for="specialCharCheckbox">Special Char</label>
+            </div>
+        </div>
+
+        <button type="button" onclick="checkPassword()">Check Strength</button>
+    </form>
+
+    <div id="strength-indicator"></div>
+    <div id="power-bar"></div>
+
+    <!-- Firebase Data Input and Retrieval Form -->
+    <form id="firebaseForm">
+        <label for="userId">User ID:</label>
+        <input type="text" id="userId" placeholder="Enter user ID">
+
+        <label for="hashValue">Hash Value:</label>
+        <input type="text" id="hashValue" placeholder="Enter hash value">
+
+        <button onclick="pushData()">Push to Realtime Database</button>
+
+        <br><br>
+
+        <button onclick="fetchData('user1')">Fetch Data for user1</button>
+        <button onclick="fetchAllUsers()">Fetch All Users</button>
+    </form>
+
+    <script>
+        // Your Firebase configuration
+        var firebaseConfig = {
+            apiKey: "AIzaSyC9r1wMDdkKsKSjQA5bZpFp04atUN8hidA",
+            authDomain: "passshield-5480e.firebaseapp.com",
+            projectId: "passshield-5480e",
+            storageBucket: "passshield-5480e.appspot.com",
+            messagingSenderId: "225716820166",
+            appId: "1:225716820166:web:c47b5d21cb75462e04dfc7",
+            measurementId: "G-XH0ZEM270V",
+            databaseURL: "https://passshield-5480e-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        var usersRef = firebase.database().ref('users');
+
+        function pushData() {
+            var userId = document.getElementById('userId').value;
+            var hashValue = document.getElementById('hashValue').value;
+
+            if (!userId || !hashValue) {
+                console.error("User ID and Hash Value cannot be empty");
+                return;
+            }
+
+            var dataToPush = {};
+            dataToPush[userId] = hashValue;
+
+            usersRef.update(dataToPush)
+                .then(function () {
+                    console.log("Data pushed to Realtime Database successfully");
+                })
+                .catch(function (error) {
+                    console.error("Error pushing data to Realtime Database: ", error);
+                });
+
+            document.getElementById('userId').value = '';
+            document.getElementById('hashValue').value = '';
+        }
+
+        function fetchData(userId) {
+            var userRef = usersRef.child(userId);
+
+            userRef.once('value')
+                .then(function (snapshot) {
+                    if (snapshot.exists()) {
+                        var hashValue = snapshot.val();
+                        console.log("Hash value for " + userId + ": " + hashValue);
+                    } else {
+                        console.warn("User " + userId + " does not exist");
+                    }
+                })
+                .catch(function (error) {
+                    console.error("Error fetching data from Realtime Database: ", error);
+                });
+        }
+
+        function fetchAllUsers() {
+    return usersRef.once('value')
+        .then(function(snapshot) {
+            var allUsers = [];
+            snapshot.forEach(function(childSnapshot) {
+                var userId = childSnapshot.key;
+                allUsers.push(userId);
+            });
+
+            console.log("All users: ", allUsers);
+            return allUsers;  // Add this line to return the data
+        })
+        .catch(function(error) {
+            console.error("Error fetching all users from Realtime Database: ", error);
+            throw error;  // Propagate the error
+        });
+}
+
+// Example of how to use the fetchAllUsers function:
+fetchAllUsers()
+    .then(function(allUsers) {
+        // Do something with the array of users (allUsers)
+        console.log("All users outside the function: ", allUsers);
+    })
+    .catch(function(error) {
+        // Handle error
+        console.error("Error outside the function: ", error);
+    });
+
+
+        // Password strength checker functions
+        document.getElementById("password").addEventListener("input", checkPassword);
+
+        function checkPassword() {
+            var passwordInput = document.getElementById("password");
+            var strengthIndicator = document.getElementById("strength-indicator");
+            var powerBar = document.getElementById("power-bar");
+            var tooltip = document.querySelector('.tooltip');
+
+            // Define regular expressions for different character types
+            var uppercaseRegex = /[A-Z]/;
+            var lowercaseRegex = /[a-z]/;
+            var numberRegex = /\d/;
+            var specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
+
+            // Get password value
+            var password = passwordInput.value;
+
+            // Initialize strength level as weak
+            var strengthLevel = "Weak";
+
+            // Check length and character types
+            if (password.length >= 8) {
+                if (uppercaseRegex.test(password) && lowercaseRegex.test(password) &&
+                    numberRegex.test(password) && specialCharRegex.test(password)) {
+                    strengthLevel = "Very Strong";
+                    powerBar.className = "very-strong";
+                } else if (uppercaseRegex.test(password) && lowercaseRegex.test(password) &&
+                    numberRegex.test(password) || uppercaseRegex.test(password) && lowercaseRegex.test(password) && specialCharRegex.test(password) ||
+                    lowercaseRegex.test(password) && specialCharRegex.test(password) && numberRegex.test(password) || specialCharRegex.test(password) &&
+                    numberRegex.test(password) && uppercaseRegex.test(password)) {
+                    strengthLevel = "Strong";
+                    powerBar.className = "strong";
+                } else if (uppercaseRegex.test(password) && lowercaseRegex.test(password) ||
+                    numberRegex.test(password) && specialCharRegex.test(password) ||
+                    uppercaseRegex.test(password) && specialCharRegex.test(password) || lowercaseRegex.test(password) && numberRegex.test(password) ||
+                    uppercaseRegex.test(password) && numberRegex.test(password) || lowercaseRegex.test(password) && specialCharRegex.test(password)) {
+                    strengthLevel = "Moderate";
+                    powerBar.className = "moderate";
+                }
+            } else {
+                powerBar.className = "very-weak";
+                tooltip.style.display = "block";
+                return;
+            }
+
+            // Hide tooltip if password is valid
+            tooltip.style.display = "none";
+
+            // Update strength indicator and power bar
+            strengthIndicator.textContent = "Password Strength: " + strengthLevel;
+            var widthPercentage = (["Weak", "Moderate", "Strong", "Very Strong", "Very Weak"].indexOf(strengthLevel) + 1) * 20;
+            powerBar.style.width = widthPercentage + "%";
+
+            // Call updateCheckboxes function after checking password
+            updateCheckboxes();
+        }
+
+        function updateCheckboxes() {
+            var passwordInput = document.getElementById("password");
+            var uppercaseCheckbox = document.getElementById("uppercaseCheckbox");
+            var lowercaseCheckbox = document.getElementById("lowercaseCheckbox");
+            var numberCheckbox = document.getElementById("numberCheckbox");
+            var specialCharCheckbox = document.getElementById("specialCharCheckbox");
+            var uppercaseTick = document.getElementById("uppercaseTick");
+            var lowercaseTick = document.getElementById("lowercaseTick");
+            var numberTick = document.getElementById("numberTick");
+            var specialCharTick = document.getElementById("specialCharTick");
+
+            // Check the corresponding checkboxes based on the password input
+            uppercaseCheckbox.checked = /[A-Z]/.test(passwordInput.value);
+            lowercaseCheckbox.checked = /[a-z]/.test(passwordInput.value);
+            numberCheckbox.checked = /\d/.test(passwordInput.value);
+            specialCharCheckbox.checked = /[!@#$%^&*(),.?":{}|<>]/.test(passwordInput.value);
+
+            // Update ticks based on the checkbox state
+            uppercaseTick.innerHTML = uppercaseCheckbox.checked ? "&#10004;" : "";
+            lowercaseTick.innerHTML = lowercaseCheckbox.checked ? "&#10004;" : "";
+            numberTick.innerHTML = numberCheckbox.checked ? "&#10004;" : "";
+            specialCharTick.innerHTML = specialCharCheckbox.checked ? "&#10004;" : "";
+        }
+
+        // Attach event listener to password input field
+        document.getElementById("password").addEventListener("input", updateCheckboxes);
+    </script>
+
+</body>
+
+</html>
